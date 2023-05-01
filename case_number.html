@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gun Violence Map</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        /* display: none; */
+      }
+      #map-casualty {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        display: none;
+      }
+
+      #title {
+        font-family: "Poppins", sans-serif;
+
+        position: absolute;
+        z-index: 999;
+        top: 5vh;
+        right: 5vh;
+        width: 25vw;
+        height: 15vh;
+        background-color: black;
+        opacity: 0.9;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.6vw;
+        border-radius: 16px;
+      }
+      .note {
+        font-size: 1vw;
+        color: gray;
+      }
+      #switch {
+        font-family: "Poppins", sans-serif;
+        font-size: 1vw;
+        position: absolute;
+        bottom: 3vh;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        /* width: 20vw; */
+        display: flex;
+        justify-content: center;
+      }
+      .buttons {
+        display: flex;
+      }
+      .button {
+        cursor: pointer;
+        /* background-color: white; */
+        color: white;
+        font-size: 1.2vw;
+        padding-bottom: 6px;
+      }
+      .center {
+        background-color: black;
+        opacity: 0.9;
+        padding: 1vw;
+        border-radius: 16px;
+        text-align: center;
+      }
+      .metric-title {
+        color: gray;
+      }
+      #case-number {
+        margin-right: 20px;
+        border-bottom: 1px solid rgb(29, 155, 240);
+        color: rgb(29, 155, 240);
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://unpkg.com/babylonjs@5.42.2/babylon.js"></script>
+    <script src="https://unpkg.com/babylonjs-loaders@5.42.2/babylonjs.loaders.min.js"></script>
+    <div id="map"></div>
+    <div id="map-casualty"></div>
+    <div id="title">
+      <div>
+        <div>Mass Shooting Incidents</div>
+        <div class="note">Data range: 1988 - 2023</div>
+      </div>
+    </div>
+    <div id="switch">
+      <div class="center">
+        <div class="metric-title">Metrics</div>
+        <div class="buttons">
+          <div id="case-number" class="button">Case number</div>
+          <div id="casualty-number" class="button">Casualty number</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const caseNumber = document.getElementById("case-number");
+
+        caseNumber.addEventListener("click", () => {
+          window.location.href = "case_number.html";
+        });
+        let casualtyNumber = document.getElementById("casualty-number");
+        casualtyNumber.addEventListener("click", () => {
+          window.location.href = "casualty_number.html";
+        });
+      });
+    </script>
+    <script>
+      var BABYLON = window.BABYLON;
+      mapboxgl.accessToken =
+        "pk.eyJ1IjoiZnJvZzU1NTU1IiwiYSI6ImNsZ3lxbjJ1cDBjM2UzZm1wbWJ3cDU3anYifQ.LJcfuAQsNVCTwANfKS5Ucg";
+      var map = new mapboxgl.Map({
+        container: "map",
+        style: "mapbox://styles/mapbox/navigation-day-v1",
+        zoom: 4,
+        center: [-98.5795, 39.8283],
+        pitch: 50,
+        antialias: true,
+      });
+
+      // World matrix parameters
+      var worldOrigin = [-98.5795, 39.8283];
+      var worldAltitude = 0;
+      // Babylon.js default coordinate system
+      // +x east, +y up, +z north
+      var worldRotate = [Math.PI / 2, 0, 0];
+
+      // Calculate mercator coordinates and scale
+      var worldOriginMercator = mapboxgl.MercatorCoordinate.fromLngLat(
+        worldOrigin,
+        worldAltitude
+      );
+      const worldScale = worldOriginMercator.meterInMercatorCoordinateUnits();
+
+      // Calculate world matrix
+      var worldMatrix = BABYLON.Matrix.Compose(
+        new BABYLON.Vector3(worldScale, worldScale, worldScale),
+
+        BABYLON.Quaternion.FromEulerAngles(
+          worldRotate[0],
+          worldRotate[1],
+          worldRotate[2]
+        ),
+        new BABYLON.Vector3(
+          worldOriginMercator.x,
+          worldOriginMercator.y,
+          worldOriginMercator.z
+        )
+      );
+
+      // configuration of the custom layer for a 3D model per the CustomLayerInterface
+      var customLayer = {
+        id: "3d-model",
+        type: "custom",
+        renderingMode: "3d",
+        onAdd: function (map, gl) {
+          this.engine = new BABYLON.Engine(
+            gl,
+            true,
+            {
+              useHighPrecisionMatrix: true, // Important to prevent jitter at mercator scale
+            },
+            true
+          );
+          this.scene = new BABYLON.Scene(this.engine);
+          this.scene.autoClear = false;
+          this.scene.detachControl();
+
+          this.scene.beforeRender = () => {
+            this.engine.wipeCaches(true);
+          };
+
+          // create simple camera (will have its project matrix manually calculated)
+          this.camera = new BABYLON.Camera(
+            "mapbox-camera",
+            new BABYLON.Vector3(0, 0, 0),
+            this.scene
+          );
+
+          // create simple light
+          const light = new BABYLON.HemisphericLight(
+            "mapbox-light",
+            new BABYLON.Vector3(0, 0, 100),
+            this.scene
+          );
+          light.intensity = 0.7;
+
+          // Add debug axes viewer, positioned at origin, 10 meter axis lengths
+          new BABYLON.AxesViewer(this.scene, 10);
+
+          //coordinate map
+          var coordinate = {
+            TN: [1.2, -0.05],
+            Michigan: [1.3, 0.65],
+            California: [-2.4, 0.8],
+            Virginia: [1.8, -0.05],
+            Colorado: [-0.7, 0.4],
+            "North Carolina": [1.8, -0.4],
+            Indiana: [1.1, 0.1],
+            Illinois: [0.85, 0.2],
+            Alabama: [1, -0.7],
+            Maryland: [1.95, 0.13],
+            Oklahoma: [0.1, -0.4],
+            Texas: [-0.05, -0.6],
+            "New York": [2.1, 0.6],
+            Georgia: [1.35, -0.7],
+            Missouri: [0.55, -0.1],
+            Wisconsin: [0.8, 0.9],
+            "New Jersey": [2.1, 0.1],
+            Florida: [1.7, -0.8],
+            Ohio: [1.44, 0.25],
+            Pennsylvania: [1.8, 0.4],
+            Tennessee: [1.2, -0.28],
+            Nevada: [-1.6, 0],
+            Washington: [-2, 1.4],
+            Lousiana: [0.5, -0.85],
+            Kansas: [0, -0.1],
+            Oregon: [-1.9, 0.6],
+            "South Carolina": [1.6, -0.6],
+            "D.C.": [1.9, -0.1],
+            Connecticut: [2.3, 0.38],
+            Minnesota: [0.35, 0.8],
+            Arizona: [-1.1, -0.55],
+            Kentucky: [1.2, -0.15],
+            Nebraska: [-0.1, 0.25],
+            Utah: [-1.15, 0],
+            Mississippi: [0.75, -0.7],
+            Massachusetts: [2.3, 0.36],
+            Hawaii: [-5.2, -1.7],
+            Arkansas: [0.55, -0.55],
+            Iowa: [0.4, 0.3],
+          };
+
+          let xx = 1000000;
+
+          // Create a 3D bar
+          function parseCSV(csvData) {
+            const rows = csvData.split("\n");
+            // console.log(rows);
+            //get case number
+            var number = {};
+            //parse row
+            for (let i = 1; i < rows.length; i++) {
+              const cells = rows[i].split(",");
+
+              // Process the data as needed
+              //   console.log(cells);
+
+              // Example: Accessing specific columns
+              var state = cells[20]; // Access the first column
+              //   console.log(state);
+              if (number[state] === null || number[state] === undefined) {
+                number[state] = 1;
+              } else {
+                number[state] = number[state] + 1;
+              }
+            }
+            console.log(number);
+            for (let state in number) {
+              console.log(state);
+              let value = number[state];
+              let coordinate_value = coordinate[state];
+              //create box
+              var box = BABYLON.MeshBuilder.CreateBox(
+                "box",
+                { width: 50000, height: 100000 * value, depth: 50000 },
+                this.scene
+              );
+              //   console.log(coordinate_value);
+              box.position.x = coordinate_value[0] * xx;
+              box.position.z = coordinate_value[1] * xx;
+            }
+          }
+
+          fetch(
+            "https://raw.githubusercontent.com/simon871028/INF-385T-Visualization/main/dataset.csv"
+          ) // Replace the URL with the actual CSV file's URL
+            .then((response) => response.text())
+            .then((data) => parseCSV(data));
+
+          //test
+          //   var box_test = BABYLON.MeshBuilder.CreateBox(
+          //     "box",
+          //     { width: 50000, height: 800000, depth: 50000 },
+          //     this.scene
+          //   );
+          //   box_test.position.x = 0.85 * xx;
+          //   box_test.position.z = -0.4 * xx;
+        },
+        render: function (gl, matrix) {
+          const cameraMatrix = BABYLON.Matrix.FromArray(matrix);
+
+          // world-view-projection matrix
+          const wvpMatrix = worldMatrix.multiply(cameraMatrix);
+
+          this.camera.freezeProjectionMatrix(wvpMatrix);
+
+          this.scene.render(false);
+          this.map.triggerRepaint();
+        },
+      };
+
+      map.on("style.load", function () {
+        map.addLayer(customLayer);
+      });
+    </script>
+    <!-- <script>
+      var BABYLON = window.BABYLON;
+      mapboxgl.accessToken =
+        "pk.eyJ1IjoiZnJvZzU1NTU1IiwiYSI6ImNsZ3lxbjJ1cDBjM2UzZm1wbWJ3cDU3anYifQ.LJcfuAQsNVCTwANfKS5Ucg";
+      var map_casualty = new mapboxgl.Map({
+        container: "map-casualty",
+        style: "mapbox://styles/mapbox/navigation-day-v1",
+        zoom: 4,
+        center: [-98.5795, 39.8283],
+        pitch: 50,
+        antialias: true,
+      });
+
+      // World matrix parameters
+      var worldOrigin1 = [-98.5795, 39.8283];
+      var worldAltitude1 = 0;
+      // Babylon.js default coordinate system
+      // +x east, +y up, +z north
+      var worldRotate1 = [Math.PI / 2, 0, 0];
+
+      // Calculate mercator coordinates and scale
+      var worldOriginMercator1 = mapboxgl.MercatorCoordinate.fromLngLat(
+        worldOrigin1,
+        worldAltitude1
+      );
+      const worldScale_casualty =
+        worldOriginMercator1.meterInMercatorCoordinateUnits();
+
+      // Calculate world matrix
+      var worldMatrix1 = BABYLON.Matrix.Compose(
+        new BABYLON.Vector3(
+          worldScale_casualty,
+          worldScale_casualty,
+          worldScale_casualty
+        ),
+
+        BABYLON.Quaternion.FromEulerAngles(
+          worldRotate1[0],
+          worldRotate1[1],
+          worldRotate1[2]
+        ),
+        new BABYLON.Vector3(
+          worldOriginMercator1.x,
+          worldOriginMercator1.y,
+          worldOriginMercator1.z
+        )
+      );
+
+      // configuration of the custom layer for a 3D model per the CustomLayerInterface
+      var customLayer1 = {
+        id: "3d-model",
+        type: "custom",
+        renderingMode: "3d",
+        onAdd: function (map_casualty, gl) {
+          this.engine = new BABYLON.Engine(
+            gl,
+            true,
+            {
+              useHighPrecisionMatrix: true, // Important to prevent jitter at mercator scale
+            },
+            true
+          );
+          this.scene = new BABYLON.Scene(this.engine);
+          this.scene.autoClear = false;
+          this.scene.detachControl();
+
+          this.scene.beforeRender = () => {
+            this.engine.wipeCaches(true);
+          };
+
+          // create simple camera (will have its project matrix manually calculated)
+          this.camera = new BABYLON.Camera(
+            "mapbox-camera",
+            new BABYLON.Vector3(0, 0, 0),
+            this.scene
+          );
+
+          // create simple light
+          const light = new BABYLON.HemisphericLight(
+            "mapbox-light",
+            new BABYLON.Vector3(0, 0, 100),
+            this.scene
+          );
+          light.intensity = 0.7;
+
+          // Add debug axes viewer, positioned at origin, 10 meter axis lengths
+          new BABYLON.AxesViewer(this.scene, 10);
+
+          //coordinate map
+          var coordinate = {
+            TN: [1.2, -0.05],
+            Michigan: [1.3, 0.65],
+            California: [-2.4, 0.8],
+            Virginia: [1.8, -0.05],
+            Colorado: [-0.7, 0.4],
+            "North Carolina": [1.8, -0.4],
+            Indiana: [1.1, 0.1],
+            Illinois: [0.85, 0.2],
+            Alabama: [1, -0.7],
+            Maryland: [1.95, 0.13],
+            Oklahoma: [0.1, -0.4],
+            Texas: [-0.05, -0.6],
+            "New York": [2.1, 0.6],
+            Georgia: [1.35, -0.7],
+            Missouri: [0.55, -0.1],
+            Wisconsin: [0.8, 0.9],
+            "New Jersey": [2.1, 0.1],
+            Florida: [1.7, -0.8],
+            Ohio: [1.44, 0.25],
+            Pennsylvania: [1.8, 0.4],
+            Tennessee: [1.2, -0.28],
+            Nevada: [-1.6, 0],
+            Washington: [-2, 1.4],
+            Lousiana: [0.5, -0.85],
+            Kansas: [0, -0.1],
+            Oregon: [-1.9, 0.6],
+            "South Carolina": [1.6, -0.6],
+            "D.C.": [1.9, -0.1],
+            Connecticut: [2.3, 0.38],
+            Minnesota: [0.35, 0.8],
+            Arizona: [-1.1, -0.55],
+            Kentucky: [1.2, -0.15],
+            Nebraska: [-0.1, 0.25],
+            Utah: [-1.15, 0],
+            Mississippi: [0.75, -0.7],
+            Massachusetts: [2.3, 0.36],
+            Hawaii: [-5.2, -1.7],
+            Arkansas: [0.55, -0.55],
+            Iowa: [0.4, 0.3],
+          };
+
+          let xx = 1000000;
+
+          // Create a 3D bar
+          function parseCSV(csvData) {
+            const rows = csvData.split("\n");
+            // console.log(rows);
+            //get case number
+            var number = {};
+            //parse row
+            for (let i = 1; i < rows.length; i++) {
+              const cells = rows[i].split(",");
+
+              // Process the data as needed
+              //   console.log(cells);
+
+              // Example: Accessing specific columns
+              var state = cells[20];
+              var casualty = parseInt(cells[4]); // Access the first column
+              //   console.log(state);
+              if (number[state] === null || number[state] === undefined) {
+                number[state] = casualty;
+              } else {
+                number[state] = number[state] + casualty;
+              }
+            }
+            console.log(number);
+            for (let state in number) {
+              console.log(state);
+              let value = number[state];
+              let coordinate_value = coordinate[state];
+              //create box
+              var box = BABYLON.MeshBuilder.CreateBox(
+                "box",
+                { width: 50000, height: 3000 * value, depth: 50000 },
+                this.scene
+              );
+              //   console.log(coordinate_value);
+              box.position.x = coordinate_value[0] * xx;
+              box.position.z = coordinate_value[1] * xx;
+            }
+          }
+
+          fetch(
+            "https://raw.githubusercontent.com/simon871028/INF-385T-Visualization/main/dataset.csv"
+          ) // Replace the URL with the actual CSV file's URL
+            .then((response) => response.text())
+            .then((data) => parseCSV(data));
+
+          //test
+          //   var box_test = BABYLON.MeshBuilder.CreateBox(
+          //     "box",
+          //     { width: 50000, height: 800000, depth: 50000 },
+          //     this.scene
+          //   );
+          //   box_test.position.x = 0.85 * xx;
+          //   box_test.position.z = -0.4 * xx;
+        },
+        render: function (gl, matrix) {
+          const cameraMatrix = BABYLON.Matrix.FromArray(matrix);
+
+          // world-view-projection matrix
+          const wvpMatrix = worldMatrix.multiply(cameraMatrix);
+
+          this.camera.freezeProjectionMatrix(wvpMatrix);
+
+          this.scene.render(false);
+          this.map_casualty.triggerRepaint();
+        },
+      };
+
+      map_casualty.on("style.load", function () {
+        map_casualty.addLayer(customLayer1);
+      });
+    </script> -->
+  </body>
+</html>

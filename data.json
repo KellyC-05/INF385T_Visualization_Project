@@ -1,0 +1,94 @@
+[{ "state": "Alabama", "latitude": "32.3182", "longitude": "-86.9023", "case": "1" },
+    { "state": "Alaska", "latitude": "66.1605", "longitude": "-153.3691", "case": "0" },
+    { "state": "Arizona", "latitude": "34.0489", "longitude": "-111.0937", "case": "1" },
+    { "state": "Arkansas", "latitude": "34.7998", "longitude": "-92.2445", "case": "1" },
+    { "state": "California", "latitude": "36.7783", "longitude": "-119.4179", "case": "25" },
+    { "state": "Colorado", "latitude": "39.5501", "longitude": "-105.7821", "case": "8" },
+    { "state": "Connecticut", "latitude": "41.6032", "longitude": "-73.0877", "case": "3" },
+    { "state": "Delaware", "latitude": "38.9108", "longitude": "-75.5277", "case": "0" },
+    { "state": "Florida", "latitude": "27.6648", "longitude": "-81.5158", "case": "1" },
+    { "state": "Georgia", "latitude": "33.0406", "longitude": "-83.6431", "case": "3" },
+    { "state": "Hawaii", "latitude": "21.0943", "longitude": "-157.4983", "case": "1" },
+    { "state": "Idaho", "latitude": "44.0682", "longitude": "-114.7420", "case": "0" },
+    { "state": "Illinois", "latitude": "40.6331", "longitude": "-89.3985", "case": "5" },
+    { "state": "Indiana", "latitude": "40.5512", "longitude": "-85.6024", "case": "2" },
+    { "state": "Iowa", "latitude": "41.8780", "longitude": "-93.0977", "case": "1" },
+    { "state": "Kansas", "latitude": "39.0119", "longitude": "-98.4842", "case": "1" },
+    { "state": "Kentucky", "latitude": "37.8393", "longitude": "-84.2700", "case": "2" },
+    { "state": "Louisiana", "latitude": "31.2448", "longitude": "-92.1450", "case": "1" },
+    { "state": "Maine", "latitude": "45.2538", "longitude": "-69.4455", "case": "0" },
+    { "state": "Maryland", "latitude": "39.0458", "longitude": "-76.6413", "case": "4" },
+    { "state": "Massachusetts", "latitude": "42.4072", "longitude": "-71.3824", "case": "1" },
+    { "state": "Michigan", "latitude": "44.3148", "longitude": "-85.6024", "case": "4" },
+    { "state": "Minnesota", "latitude": "46.7296", "longitude": "-94.6859", "case": "2" },
+    { "state": "Mississippi", "latitude": "32.3547", "longitude": "-89.3985", "case": "1" },
+    { "state": "Missouri", "latitude": "37.9643", "longitude": "-91.8318", "case": "2" },
+    { "state": "Montana", "latitude": "46.8797", "longitude": "-110.3626", "case": "2" },
+    { "state": "Nebraska", "latitude": "41.4925", "longitude": "-99.9018", "case": "1" },
+    { "state": "Nevada", "latitude": "38.8026", "longitude": "-116.4194", "case": "1" },
+    { "state": "New Hampshire", "latitude": "43.1939", "longitude": "-71.5724", "case": "0" },
+    { "state": "New Jersey", "latitude": "40.0583", "longitude": "-74.4057", "case": "1" },
+    { "state": "New Mexico", "latitude": "34.9727", "longitude": "-105.0324", "case": "0" },
+    { "state": "New York", "latitude": "43.2994", "longitude": "-74.2179", "case": "5" },
+    { "state": "North Carolina", "latitude": "35.7596", "longitude": "-79.0193", "case": "3" },
+    { "state": "North Dakota", "latitude": "47.5515", "longitude": "-101.0020", "case": "0" },
+    { "state": "Ohio", "latitude": "40.4173", "longitude": "-82.9071", "case": "4" },
+    { "state": "Oklahoma", "latitude": "35.0078", "longitude": "-97.0929", "case": "2" },
+    { "state": "Oregon", "latitude": "43.8041", "longitude": "-120.5542", "case": "2" },
+    { "state": "Pennsylvania", "latitude": "41.2033", "longitude": "-77.1945", "case": "5" }, {
+        "state": "Rhode Island",
+        "latitude": "41.5801",
+        "longitude": "-71.4774",
+        "case": "0"
+    }, {
+        "state": "South Carolina",
+        "latitude": "33.8361",
+        "longitude": "-81.1637",
+        "case": "2"
+    }, { "state": "South Dakota", "latitude": "43.9695", "longitude": "-99.9018", "case": "0" }, {
+        "state": "Tennessee",
+        "latitude": "35.5175",
+        "longitude": "-86.5804",
+        "case": "3"
+    }, {
+        "state": "Texas",
+        "latitude": "31.9686",
+        "longitude": "-99.9018",
+        "case": "12"
+    }, {
+        "state": "Utah",
+        "latitude": "39.32098",
+        "longitude": "-111.0937",
+        "case": "1"
+    }, {
+        "state": "Vermont",
+        "latitude": "44.5588",
+        "longitude": "-72.5778",
+        "case": "0"
+    }, {
+        "state": "Virginia",
+        "latitude": "37.4316",
+        "longitude": "-78.6569",
+        "case": "4"
+    }, {
+        "state": "Washington",
+        "latitude": "47.7511",
+        "longitude": "-120.7401",
+        "case": "7"
+    }, {
+        "state": "West Virginia",
+        "latitude": "38.5976",
+        "longitude": "-80.4549",
+        "case": "0"
+    }, {
+        "state": "Wisconsin",
+        "latitude": "43.7844",
+        "longitude": "-88.7879",
+        "case": "5"
+    }, {
+        "state": "Wyoming",
+        "latitude": "43.075",
+        "longitude": "-107.2903",
+        "case": "0"
+    }
+]
